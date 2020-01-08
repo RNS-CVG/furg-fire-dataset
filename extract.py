@@ -10,7 +10,10 @@ import csv
 n = 0
 files = os.listdir(os.getcwd())
 files = set(map(lambda x: x.split(".")[0], files))
-with open('data.csv', 'w') as csvfile:
+os.mkdir(os.path.join(os.getcwd(), "Images"))
+os.mkdir(os.path.join(os.getcwd(), "Images", "fire"))
+os.mkdir(os.path.join(os.getcwd(), "Images", "notfire"))
+with open('./Images/data.csv', 'w') as csvfile:
     filewriter = csv.writer(csvfile)
     for filename in files:
         cur_file = glob.glob(filename + ".mp4") + glob.glob(filename + ".xml")
@@ -19,7 +22,7 @@ with open('data.csv', 'w') as csvfile:
             video = cv2.VideoCapture(cur_file[0])
             data = bf.data(fromstring(open(cur_file[1], "r+").read()))
             frame_idx = 0
-        
+
             while video.isOpened():
                 ret, frame = video.read()
                 if ret == True:
@@ -30,14 +33,14 @@ with open('data.csv', 'w') as csvfile:
                         # print(kp['_']['$'].split(" "))
                         print("fire")
                         filename = "{}.jpg".format(n)
-                        filepath = "./Images/" + filename
-                        filewriter.writerow([filename, 1])
-                        
+                        filepath = "./Images/fire/" + filename
+                        filewriter.writerow(["./Images/fire/" + filename, 1])
+
                     else:
                         filename = "{}.jpg".format(n)
-                        filepath = "./Images/" + filename
-                        filewriter.writerow([filename, 0])
-                        print("not fire")
+                        filepath = "./Images/notfire/" + filename
+
+                        filewriter.writerow(["./Images/notfire/" + filename, 0])
 
                     cv2.imwrite(filepath, frame)
                     n += 1
@@ -47,4 +50,3 @@ with open('data.csv', 'w') as csvfile:
                     # print(kp)
                 else:
                     break
-    
