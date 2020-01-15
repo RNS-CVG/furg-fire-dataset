@@ -67,7 +67,7 @@ with open('./Images/data.csv', 'w') as csvfile:
 
                     # cv2.imwrite(filepath, frame)
                     n += 1
-                    cv2.imshow('frame', frame)
+                    # cv2.imshow('frame', frame)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
                     frame_idx += 1
