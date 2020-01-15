@@ -60,7 +60,7 @@ for filename in files:
                                 for _, kps in kplist.items():
                                     x, y, height, width = [int(z) for z in kps.split(" ")]
                                     x_c, y_c, _, _ = centerAndNormalize(x, y, height, width)
-                                    datalist.append(("0 {} {} {} {}".format(x_c, y_c, height, width)))
+                                    datalist.append(("0 {} {} {} {}".format(x_c / frame.shape[0], y_c / frame.shape[1], height / frame.shape[0], width / frame.shape[1])))
                                     # cv2.circle(frame, (x_c, y_c), 5, (0, 255, 0), 2)
                                     # cv2.rectangle(frame, (x, y), (x+height, y+width), (255, 0, 0), 2)
                                     
@@ -68,10 +68,15 @@ for filename in files:
                             for _, kps in val.items():
                                 x, y, height, width = [int(z) for z in kps.split(" ")]
                                 x_c, y_c, _, _ = centerAndNormalize(x, y, height, width)
-                                datalist.append(("0 {} {} {} {}".format(x_c, y_c, height, width)))
+                                datalist.append(("0 {} {} {} {}".format(x_c / frame.shape[0], y_c / frame.shape[1], height / frame.shape[0], width / frame.shape[1])))
                                 # cv2.circle(frame, (x_c, y_c), 5, (0, 255, 0), 2)
                                 # cv2.rectangle(frame, (x, y), (x+height, y+width), (255, 0, 0), 2)
                 
+                print("%: {}".format(n / 26223 * 100))  
+                filename = "{}.jpg".format(n)
+                filepath = "./coco/images/" + filename
+                cv2.imwrite(filepath, frame)
+
                 if len(datalist) != 0:
                     with open("./coco/labels/{}.txt".format(n), "x") as datafile:
                         datafile.write("\n".join(datalist))
@@ -82,13 +87,7 @@ for filename in files:
                         else:
                             test.write(filepath + "\n")
 
-                print("N:", n, datalist)  
-                filename = "{}.jpg".format(n)
-                filepath = "./coco/images/" + filename
-                cv2.imwrite(filepath, frame)
-
                 
-                        
 
                 n += 1
                 # cv2.imshow('frame', frame)
