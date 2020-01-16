@@ -10,8 +10,10 @@ import shutil
 import numpy as np
 from PIL import Image
 import random
+import math
 
 n = 0
+positives = 0
 files = os.listdir(os.getcwd())
 files = set(map(lambda x: x.split(".")[0], files))
 
@@ -20,10 +22,21 @@ def removeAndCreate(folderName):
         shutil.rmtree(folderName)
     os.mkdir(folderName)
 
-def centerAndNormalize(x, y, h, w):
-    x_center = x + (h // 2)
-    y_center = y + (w // 2)
+def centerAndNormalize(x, y, h, w, Ih, Iw):
+    x_center = (x + (h / 2)) / Iw
+    y_center = (y + (w / 2)) / Ih
+    h = (h / Iw)
+    w = (w / Ih)
 
+    print(x_center, y_center, h, w, Ih, Iw)
+
+
+    assert x_center  > 0 and x_center < 1
+    assert y_center  > 0 and y_center < 1
+    assert h >= 0 and h <= 1
+    assert w >= 0 and w <= 1
+
+    
     return x_center, y_center, h, w 
 
 removeAndCreate("coco")
@@ -35,7 +48,7 @@ with open("./coco/data.names", "x") as data:
     data.write("fire")
 
 for filename in files:
-# for filename in ["house1"]:
+# for filename in ["Car1"]:
     cur_file = glob.glob(filename + ".mp4") + glob.glob(filename + ".xml")
     if len(cur_file) == 2:
         print("Opening: {}".format(cur_file))
@@ -59,37 +72,41 @@ for filename in files:
                             for idx, kplist in enumerate(val):
                                 for _, kps in kplist.items():
                                     x, y, height, width = [int(z) for z in kps.split(" ")]
-                                    x_c, y_c, _, _ = centerAndNormalize(x, y, height, width)
-                                    datalist.append(("0 {} {} {} {}".format(x_c / frame.shape[0], y_c / frame.shape[1], height / frame.shape[0], width / frame.shape[1])))
-                                    # cv2.circle(frame, (x_c, y_c), 5, (0, 255, 0), 2)
+                                    x_n, y_n, w_n, h_n = centerAndNormalize(x, y, height, width, frame.shape[0], frame.shape[1])
+                                    datalist.append(("0 {} {} {} {}".format(x_n, y_n, w_n, h_n)))
+                                
+                                    # cv2.circle(frame, (int(x_n), int(y_n)), 5, (0, 255, 0), 2)
                                     # cv2.rectangle(frame, (x, y), (x+height, y+width), (255, 0, 0), 2)
                                     
                         else:
                             for _, kps in val.items():
                                 x, y, height, width = [int(z) for z in kps.split(" ")]
-                                x_c, y_c, _, _ = centerAndNormalize(x, y, height, width)
-                                datalist.append(("0 {} {} {} {}".format(x_c / frame.shape[0], y_c / frame.shape[1], height / frame.shape[0], width / frame.shape[1])))
-                                # cv2.circle(frame, (x_c, y_c), 5, (0, 255, 0), 2)
+                                x_n, y_n, w_n, h_n = centerAndNormalize(x, y, height, width, frame.shape[0], frame.shape[1])
+                                datalist.append(("0 {} {} {} {}".format(x_n, y_n, w_n, h_n)))
+                                # cv2.circle(frame, (int(x_n), int(y_n)), 5, (0, 255, 0), 2)
                                 # cv2.rectangle(frame, (x, y), (x+height, y+width), (255, 0, 0), 2)
                 
-                print("%: {}".format(n / 26223 * 100))  
-                filename = "{}.jpg".format(n)
-                filepath = "./coco/images/" + filename
-                cv2.imwrite(filepath, frame)
+                print("%: {}".format(n / 26223 * 100), positives)
+                if positives % 180 == 0 and len(datalist) != 0:
+                    filename = "{}.jpg".format(n)
+                    filepath = "./coco/images/" + filename
+                    cv2.imwrite(filepath, frame)
 
-                if len(datalist) != 0:
-                    with open("./coco/labels/{}.txt".format(n), "x") as datafile:
-                        datafile.write("\n".join(datalist))
-                    
-                    with open("./coco/train.txt", "a") as train, open("./coco/test.txt", "a") as test:
-                        if random.choice([x for x in range(1, 10)]) > 2:
-                            train.write(filepath + "\n")
-                        else:
-                            test.write(filepath + "\n")
+                    if len(datalist) != 0:
+                        
+                        with open("./coco/labels/{}.txt".format(n), "x") as datafile:
+                            datafile.write("\n".join(datalist))
+                        
+                        with open("./coco/train.txt", "a") as train, open("./coco/test.txt", "a") as test:
+                            if random.choice([x for x in range(1, 10)]) > 2:
+                                train.write(filepath + "\n")
+                            else:
+                                test.write(filepath + "\n")
 
                 
-
+                if len(datalist) != 0: positives += 1
                 n += 1
+                
                 # cv2.imshow('frame', frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
